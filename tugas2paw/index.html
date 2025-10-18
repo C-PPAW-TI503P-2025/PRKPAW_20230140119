@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Buku Modern</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>My Digital Bookshelf 📚</h1>
+        </header>
+        
+        <main>
+            <aside id="form-container">
+                <h2>Tambah Buku Baru</h2>
+                <form id="add-book-form">
+                    <div class="form-group">
+                        <label for="title">Judul Buku</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Penulis</label>
+                        <input type="text" id="author" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Tambah ke Rak</button>
+                </form>
+            </aside>
+
+            <section id="book-list-container">
+                <h2>Daftar Buku</h2>
+                
+                <div id="loader" class="loader-container">
+                    <div class="loader"></div>
+                </div>
+
+                <div id="book-list">
+                    </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
