@@ -1,33 +1,28 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const PORT = 3001;
+const morgan = require("morgan");
+
+// Impor router
+const presensiRoutes = require("./routes/presensi");
+const reportRoutes = require("./routes/report");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Logging middleware
+app.use(morgan("dev"));
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
-
-// Import dan gunakan router
-const bookRoutes = require('./routes/books');
-app.use('/api/books', bookRoutes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+app.get("/", (req, res) => {
+  res.send("Home Page for API");
 });
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  res.status(500).json({ message: 'Internal Server Error' });
-});
-
+const ruteBuku = require("./routes/books");
+app.use("/api/books", ruteBuku);
+app.use("/api/presensi", presensiRoutes);
+app.use("/api/reports", reportRoutes);
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}/`);
+  console.log(`Express server running at http://localhost:${PORT}/`);
 });
