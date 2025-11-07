@@ -1,51 +1,58 @@
-// routes/presensi.js
+// routes/presensi.js (SUDAH DIPERBAIKI)
+
 const express = require('express');
 const router = express.Router();
 const presensiController = require('../controllers/presensiController');
-const { addUserData } = require('../middleware/permissionMiddleware');
-const { body, param, validationResult } = require('express-validator'); // Impor validator
+// 1. UBAH INI: Impor 'authenticateToken' (bukan 'addUserData' lagi)
+const { authenticateToken } = require('../middleware/permissionMiddleware'); 
+const { body, param } = require('express-validator'); // Hapus validationResult jika tidak dipakai di sini
 
-// Middleware untuk semua rute di bawah ini
-router.use(addUserData);
+// 2. UBAH INI: Gunakan middleware yang baru
+router.use(authenticateToken);
 
+// Rute ini sekarang otomatis dilindungi oleh authenticateToken
 router.post('/check-in', presensiController.CheckIn);
 router.post('/check-out', presensiController.CheckOut);
 
-// Route PUT sesuai modul  dengan tambahan validasi 
+// Route PUT (validasi 'nama' sudah dihapus)
 router.put(
   '/:id',
-  [ // Array middleware validasi
+  [ 
     param('id').isInt().withMessage('ID Presensi harus berupa angka.'),
-    body('checkIn') // Nama field di body request sesuai contoh controller 
+    body('checkIn')
       .optional()
       .isISO8601()
       .toDate()
       .withMessage('Format checkIn tidak valid (ISO8601: YYYY-MM-DDTHH:mm:ss.sssZ).'),
-    body('checkOut') // Nama field di body request sesuai contoh controller 
+    body('checkOut')
       .optional()
       .isISO8601()
       .toDate()
       .withMessage('Format checkOut tidak valid (ISO8601: YYYY-MM-DDTHH:mm:ss.sssZ).')
       .custom((value, { req }) => {
-        // Validasi kustom: checkOut harus setelah checkIn jika keduanya ada
+        // Ambil checkIn dari body jika ada, jika tidak, kita tidak bisa memvalidasi
         const checkInDate = req.body.checkIn ? new Date(req.body.checkIn) : null;
         const checkOutDate = value ? new Date(value) : null;
-        // Hanya validasi jika kedua tanggal ada dan valid
-        if (checkInDate && checkOutDate && !isNaN(checkInDate) && !isNaN(checkOutDate) && checkOutDate <= checkInDate) {
+        
+          // Hanya validasi jika checkIn (dari body) dan checkOut (saat ini) ada
+        if (checkInDate && checkOutDate && checkOutDate <= checkInDate) {
           throw new Error('checkOut harus setelah checkIn.');
         }
         return true;
       }),
-    body('nama') // Validasi opsional untuk 'nama' jika diperlukan
+    // 3. HAPUS INI: Validasi 'nama' sudah tidak diperlukan
+    /*
+     body('nama') 
        .optional()
        .isString().withMessage('Nama harus berupa string.')
-       .trim() // Hapus spasi di awal/akhir
+       .trim() 
        .notEmpty().withMessage('Nama tidak boleh kosong jika diisi.')
+    */
   ],
-  presensiController.updatePresensi // Handler dari modul 
+  presensiController.updatePresensi 
 );
 
-// Route DELETE sesuai modul [cite: 73]
-router.delete('/:id', presensiController.deletePresensi); // Pastikan handler deletePresensi ada di controller
+// Rute ini juga otomatis dilindungi
+router.delete('/:id', presensiController.deletePresensi); 
 
 module.exports = router;

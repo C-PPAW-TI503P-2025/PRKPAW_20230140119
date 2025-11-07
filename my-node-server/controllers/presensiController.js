@@ -1,19 +1,20 @@
 // controllers/presensiController.js
 
-// 1. Impor modul yang diperlukan
-const { Presensi, Sequelize } = require("../models"); // Pastikan Sequelize diimpor jika menggunakan Op
-const { Op } = Sequelize; // Impor Operator jika diperlukan di fungsi lain (contoh: reportController)
+// 1. Impor modul
+const sequelize = require("sequelize");
+const { Op } = sequelize;
+const { Presensi } = require("../models"); // Sequelize dan Op tidak perlu diimpor di sini jika tidak dipakai
 const { format } = require("date-fns-tz");
-const { validationResult } = require('express-validator'); // Impor validationResult
+const { validationResult } = require('express-validator');
 
 // 2. Tentukan zona waktu
 const timeZone = "Asia/Jakarta";
 
-// 3. Implementasi CheckIn
+// 3. Implementasi CheckIn (Refactored)
 exports.CheckIn = async (req, res) => {
   try {
     // Ambil data user dari request (diasumsikan dari middleware)
-    const { id: userId, nama: userName } = req.user;
+    const { id: userId, nama: userName } = req.user; // Kita masih perlu userName untuk pesan
     const waktuSekarang = new Date();
 
     // Cari apakah sudah ada check-in aktif (belum checkout)
@@ -27,18 +28,18 @@ exports.CheckIn = async (req, res) => {
         .json({ message: "Anda sudah melakukan check-in hari ini dan belum check-out." });
     }
 
-    // Buat record check-in baru
+    // Buat record check-in baru (tanpa 'nama')
     const newRecord = await Presensi.create({
       userId: userId,
-      nama: userName,
+      // 'nama' dihapus dari sini
       checkIn: waktuSekarang,
     });
 
-    // Format data untuk respons
+    // Format data untuk respons (tanpa 'nama')
     const formattedData = {
-        id: newRecord.id, // ID dari record yang baru dibuat
+        id: newRecord.id,
         userId: newRecord.userId,
-        nama: newRecord.nama,
+        // 'nama' dihapus dari sini
         checkIn: format(new Date(newRecord.checkIn), "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
         checkOut: null
     };
@@ -59,11 +60,11 @@ exports.CheckIn = async (req, res) => {
   }
 };
 
-// 4. Implementasi CheckOut
+// 4. Implementasi CheckOut (Refactored)
 exports.CheckOut = async (req, res) => {
   try {
     // Ambil data user dari request
-    const { id: userId, nama: userName } = req.user;
+    const { id: userId, nama: userName } = req.user; // Kita masih perlu userName untuk pesan
     const waktuSekarang = new Date();
 
     // Cari record check-in aktif yang belum checkout
@@ -88,11 +89,11 @@ exports.CheckOut = async (req, res) => {
     // Simpan perubahan ke database
     await recordToUpdate.save();
 
-    // Format data untuk respons
+    // Format data untuk respons (tanpa 'nama')
     const formattedData = {
         id: recordToUpdate.id,
         userId: recordToUpdate.userId,
-        nama: recordToUpdate.nama,
+        // 'nama' dihapus dari sini
         checkIn: format(new Date(recordToUpdate.checkIn), "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
         checkOut: format(new Date(recordToUpdate.checkOut), "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
     };
@@ -114,9 +115,9 @@ exports.CheckOut = async (req, res) => {
   }
 };
 
-// 5. Implementasi Update Presensi (sesuai modul + validasi)
+// 5. Implementasi Update Presensi (Refactored)
 exports.updatePresensi = async (req, res) => {
-  // Cek hasil validasi dari express-validator (dijalankan di route)
+  // Cek hasil validasi
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -124,18 +125,19 @@ exports.updatePresensi = async (req, res) => {
 
   try {
     const presensiId = req.params.id;
-    // Ambil data yang sudah divalidasi dan dikonversi (jika ada)
-    const { checkIn, checkOut, nama } = req.body;
+    // 'nama' dihapus dari body
+    const { checkIn, checkOut } = req.body;
 
     // Cek jika tidak ada data yang dikirim
-    if (checkIn === undefined && checkOut === undefined && nama === undefined) {
+    // 'nama' dihapus dari cek
+    if (checkIn === undefined && checkOut === undefined) {
       return res.status(400).json({
         message:
-          "Request body tidak berisi data yang valid untuk diupdate (checkIn, checkOut, atau nama).",
+          "Request body tidak berisi data yang valid untuk diupdate (checkIn atau checkOut).",
       });
     }
 
-    // Cari record presensi yang akan diupdate
+    // Cari record presensi
     const recordToUpdate = await Presensi.findByPk(presensiId);
 
     // Jika record tidak ditemukan
@@ -145,27 +147,27 @@ exports.updatePresensi = async (req, res) => {
         .json({ message: "Catatan presensi tidak ditemukan." });
     }
 
-    // Tentukan nilai checkIn final (baru atau lama)
     const finalCheckIn = checkIn !== undefined ? checkIn : recordToUpdate.checkIn;
 
-    // Validasi tambahan: checkOut harus setelah checkIn (termasuk checkIn yang mungkin tidak diubah)
+    // Validasi checkOut > checkIn
     if (checkOut && finalCheckIn && new Date(checkOut) <= new Date(finalCheckIn)) {
       return res.status(400).json({ message: 'checkOut harus setelah checkIn.' });
     }
 
-    // Update field jika ada di body request
-    if (checkIn !== undefined) recordToUpdate.checkIn = checkIn; // Gunakan objek Date dari validator
-    if (checkOut !== undefined) recordToUpdate.checkOut = checkOut; // Gunakan objek Date dari validator
-    if (nama !== undefined) recordToUpdate.nama = nama.trim(); // Trim nama jika ada
+    // Update field
+    if (checkIn !== undefined) recordToUpdate.checkIn = checkIn;
+    if (checkOut !== undefined) recordToUpdate.checkOut = checkOut;
+    // 'nama' dihapus dari update
+    // if (nama !== undefined) recordToUpdate.nama = nama.trim(); 
 
     // Simpan perubahan
     await recordToUpdate.save();
 
-    // Format data yang sudah diupdate untuk respons
+    // Format data untuk respons (tanpa 'nama')
     const formattedData = {
         id: recordToUpdate.id,
         userId: recordToUpdate.userId,
-        nama: recordToUpdate.nama,
+        // 'nama' dihapus dari sini
         checkIn: recordToUpdate.checkIn ? format(new Date(recordToUpdate.checkIn), "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
         checkOut: recordToUpdate.checkOut ? format(new Date(recordToUpdate.checkOut), "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
         createdAt: recordToUpdate.createdAt,
@@ -187,36 +189,34 @@ exports.updatePresensi = async (req, res) => {
   }
 };
 
-// 6. Implementasi Delete Presensi (sesuai modul)
+// 6. Implementasi Delete Presensi (Tidak perlu diubah)
+// Fungsi delete Anda sudah benar dan tidak bergantung pada kolom 'nama'
 exports.deletePresensi = async (req, res) => {
   try {
-    const { id: userId } = req.user; // Ambil userId dari user yang login
-    const presensiId = req.params.id; // Ambil ID presensi dari parameter URL
+    const { id: userId } = req.user; 
+    const presensiId = req.params.id; 
 
-    // Cari record yang akan dihapus
     const recordToDelete = await Presensi.findByPk(presensiId);
 
-    // Jika tidak ditemukan
     if (!recordToDelete) {
       return res
         .status(404)
         .json({ message: "Catatan presensi tidak ditemukan." });
     }
 
-    // Pengecekan kepemilikan (sesuaikan jika logic berbeda)
+    // Pengecekan kepemilikan sudah benar
     if (recordToDelete.userId !== userId) {
       return res
         .status(403)
         .json({ message: "Akses ditolak: Anda bukan pemilik catatan ini." });
     }
 
-    // Hapus record
     await recordToDelete.destroy();
 
-    // Kirim respons sukses tanpa konten
-    res.status(204).json({ message: "Catatan presensi berhasil dihapus." });
+    // Beri respons 204 (No Content) atau 200 dengan JSON
+    res.status(200).json({ message : "Data presensi berhasil dihapus"} ); 
+    // Catatan: Respons 204 seharusnya tidak memiliki body JSON, jadi 200 lebih baik jika ingin mengirim pesan
   } catch (error) {
-    // Tangani error server
     console.error("Error saat menghapus presensi:", error);
     res
       .status(500)
