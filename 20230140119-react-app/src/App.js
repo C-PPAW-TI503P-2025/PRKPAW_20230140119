@@ -1,5 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Import Components Baru
+import Navbar from './components/Navbar';
+import ReportPage from './components/ReportPage';
+import AttendancePage from './components/PresensiPage';
+
+// Import Halaman (Sesuai path di kode terakhir Anda)
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import DashboardPage from './components/DashboardPage';
@@ -7,21 +14,41 @@ import DashboardPage from './components/DashboardPage';
 function App() {
   return (
     <Router>
-      <div>
-        {/* Navigasi ini bisa dihapus jika tidak diperlukan */}
-        <nav className="p-4 bg-gray-100">
-          <Link to="/login" className="mr-4">Login</Link>
-          <Link to="/register">Register</Link>
-        </nav>
-        
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/" element={<LoginPage />} /> 
-        </Routes>
-      </div>
+      <MainLayout />
     </Router>
   );
 }
+
+// Komponen Layout untuk mengatur logika tampilan Navbar
+const MainLayout = () => {
+  // const location = useLocation(); // Tidak lagi diperlukan untuk pengecekan
+  
+  // KITA HAPUS LOGIKA PENYEMBUNYIAN NAVBAR
+  // Agar Navbar muncul di semua halaman (Login, Register, Dashboard, dll)
+  const shouldShowNavbar = true;
+
+  return (
+    <>
+      {/* Render Navbar Global di SEMUA halaman */}
+      {shouldShowNavbar && <Navbar />}
+      
+      <div className="App">
+        <Routes>
+           {/* --- Public Routes --- */}
+           <Route path="/" element={<LoginPage />} />
+           <Route path="/login" element={<LoginPage />} />
+           <Route path="/register" element={<RegisterPage />} />
+           
+           {/* --- Protected Routes --- */}
+           <Route path="/dashboard" element={<DashboardPage />} />
+           <Route path="/presensi" element={<AttendancePage />} /> 
+           
+           {/* --- Admin Route --- */}
+           <Route path="/laporan-admin" element={<ReportPage />} />
+        </Routes>
+      </div>
+    </>
+  );
+};
+
 export default App;

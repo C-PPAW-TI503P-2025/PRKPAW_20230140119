@@ -141,3 +141,8 @@ function RegisterPage() {
 }
 
 export default RegisterPage;
+
+
+// fronend npm  start ,react app
+
+// backend node server.js ,my node server

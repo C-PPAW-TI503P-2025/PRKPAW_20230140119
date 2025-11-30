@@ -1,79 +1,90 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Anda bisa mengimpor ikon dari react-icons jika terinstal
-// import { FiLogOut, FiCheckCircle } from 'react-icons/fi';
-
-// SVG Ikon sebagai fallback jika react-icons tidak ada
-const CheckCircleIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    className="h-16 w-16 text-green-500" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    className="h-5 w-5 mr-2" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-  </svg>
-);
-
+import { jwtDecode } from 'jwt-decode';
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
-  // Fungsi logout (sesuai Task 3)
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // Hapus token
-    navigate('/login'); // Arahkan ke login
-  };
+  // Ambil data user dari token untuk menampilkan nama & role
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    } else {
+      try {
+        const decoded = jwtDecode(token);
+        setUser(decoded);
+      } catch (error) {
+        console.error("Token error:", error);
+        navigate('/login');
+      }
+    }
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 sm:p-8">
-      
-      <div className="w-full max-w-lg bg-white p-8 sm:p-12 rounded-xl shadow-lg text-center transform transition-all hover:scale-105 duration-300">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <main className="max-w-5xl mx-auto">
         
-        {/* Ikon Sukses */}
-        <div className="flex justify-center mb-4">
-          <CheckCircleIcon />
+        {/* Header Sambutan */}
+        <header className="mb-10 text-center">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Selamat Datang, <span className="text-blue-600">{user ? user.nama : 'User'}</span>!
+          </h1>
+          <p className="text-gray-500 text-lg">
+            Silakan pilih menu di bawah ini untuk melanjutkan aktivitas Anda.
+          </p>
+        </header>
+
+        {/* Grid Menu */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* KARTU 1: Menu Presensi (Untuk Semua User) */}
+          <div 
+            onClick={() => navigate('/presensi')}
+            className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl border border-gray-100 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 group"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-blue-100 p-4 rounded-full mb-4 group-hover:bg-blue-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Presensi Harian</h2>
+              <p className="text-gray-500">
+                Lakukan Check-In saat datang dan Check-Out sebelum pulang kerja.
+              </p>
+              <button className="mt-6 text-blue-600 font-semibold group-hover:underline">
+                Buka Halaman Presensi &rarr;
+              </button>
+            </div>
+          </div>
+
+          {/* KARTU 2: Menu Laporan (Khusus Admin) */}
+          {user && user.role === 'admin' && (
+            <div 
+              onClick={() => navigate('/laporan-admin')}
+              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl border border-gray-100 cursor-pointer transition-all duration-300 transform hover:-translate-y-1 group"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="bg-green-100 p-4 rounded-full mb-4 group-hover:bg-green-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Laporan Admin</h2>
+                <p className="text-gray-500">
+                  Lihat rekapitulasi kehadiran seluruh karyawan dan filter data.
+                </p>
+                <button className="mt-6 text-green-600 font-semibold group-hover:underline">
+                  Buka Laporan &rarr;
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
-        
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Login Sukses!
-        </h1>
-        
-        <p className="text-lg text-gray-600 mb-8">
-          Selamat Datang di Halaman Dashboard Anda.
-        </p>
-
-        <p className="text-sm text-gray-500 mb-8 bg-gray-50 p-4 rounded-md">
-          Ini adalah area aman Anda. Semua data dan fitur khusus
-          tersedia di sini.
-        </p>
-
-        {/* Tombol Logout dengan Ikon */}
-        <button
-          onClick={handleLogout}
-          className="w-full sm:w-auto inline-flex items-center justify-center py-3 px-8 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-        >
-          <LogoutIcon />
-          Logout
-        </button>
-      </div>
-
+      </main>
     </div>
   );
 }
