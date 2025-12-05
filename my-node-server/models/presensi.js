@@ -13,9 +13,10 @@ module.exports = (sequelize, DataTypes) => {
     userId: DataTypes.INTEGER,
     checkIn: DataTypes.DATE,
     checkOut: DataTypes.DATE,
-    // TAMBAHAN WAJIB: Agar Sequelize mau menyimpan data lokasi
     latitude: DataTypes.DECIMAL(10, 8),
-    longitude: DataTypes.DECIMAL(11, 8)
+    longitude: DataTypes.DECIMAL(11, 8),
+    // TAMBAHAN BARU [cite: 55-56]
+    buktiFoto: DataTypes.STRING 
   }, {
     sequelize,
     modelName: 'Presensi',
